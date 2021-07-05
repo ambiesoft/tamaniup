@@ -2,53 +2,20 @@
 // tamaniupDlg.cpp : implementation file
 //
 
-#include "pch.h"
+#include "stdafx.h"
 #include "framework.h"
 #include "tamaniup.h"
 #include "tamaniupDlg.h"
 #include "afxdialogex.h"
+#include "AboutDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-
-// CtamaniupDlg dialog
-
-
+using namespace Ambiesoft;
+using namespace Ambiesoft::stdosd;
+using namespace std;
 
 CtamaniupDlg::CtamaniupDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_TAMANIUP_DIALOG, pParent)
@@ -65,6 +32,7 @@ BEGIN_MESSAGE_MAP(CtamaniupDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_BUTTON_OPENFOLDER, &CtamaniupDlg::OnBnClickedButtonOpenfolder)
 END_MESSAGE_MAP()
 
 
@@ -153,3 +121,30 @@ HCURSOR CtamaniupDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CtamaniupDlg::OnBnClickedButtonOpenfolder()
+{
+	wstring barnFolder = theApp.GetBarnFolder();
+	if (!stdDirectoryExists(barnFolder.c_str()))
+	{
+		if (IDYES != AfxMessageBox(I18N(L"Barn folder does not exist? Do you want to create?"),
+			MB_ICONQUESTION | MB_YESNO))
+		{
+			return;
+		}
+		CreateDirectory(barnFolder.c_str(), NULL);
+		if (!stdDirectoryExists(barnFolder.c_str()))
+		{
+			AfxMessageBox(stdFormat(
+				I18N(L"Failed to create directory '%s'"),
+				barnFolder.c_str()).c_str());
+			return;
+		}
+	}
+	if (!OpenCommon(*this, barnFolder.c_str()))
+	{
+		AfxMessageBox(I18N(L"Failed to open folder."));
+		return;
+	}
+}

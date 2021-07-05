@@ -10,4 +10,19 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 
+#include <Windows.h>
+#include <string>
+
+#include "../../lsMisc/CreateFolderIniPath.h"
+#include "../../lsMisc/CreateCompleteDirectory.h"
+#include "../../lsMisc/UTF16toUTF8.h"
+#include "../../lsMisc/OpenCommon.h"
+#include "../../lsMisc/stdosd/stdosd.h"
+#include "../../profile/cpp/Profile/include/ambiesoft.profile.h"
+
+#define I18N(s) (s)
+
+const wchar_t STR_BARNDIRECTORYNAME[] = L"barn";
+const char SECTION_OPTION[] = "Option";
+const char KEY_BARNFOLDER[] = "BarnFolder";
 #endif //PCH_H

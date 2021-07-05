@@ -23,7 +23,9 @@ public:
 // Overrides
 public:
 	virtual BOOL InitInstance();
-
+	std::wstring GetBarnFolder() const;
+private:
+	BOOL PreInitInstance();
 // Implementation
 
 	DECLARE_MESSAGE_MAP()

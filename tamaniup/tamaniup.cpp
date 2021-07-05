@@ -2,7 +2,9 @@
 // tamaniup.cpp : Defines the class behaviors for the application.
 //
 
-#include "pch.h"
+#include "stdafx.h"
+
+
 #include "framework.h"
 #include "tamaniup.h"
 #include "tamaniupDlg.h"
@@ -11,6 +13,9 @@
 #define new DEBUG_NEW
 #endif
 
+using namespace Ambiesoft;
+using namespace Ambiesoft::stdosd;
+using namespace std;
 
 // CtamaniupApp
 
@@ -20,7 +25,6 @@ END_MESSAGE_MAP()
 
 
 // CtamaniupApp construction
-
 CtamaniupApp::CtamaniupApp()
 {
 	// TODO: add construction code here,
@@ -29,14 +33,53 @@ CtamaniupApp::CtamaniupApp()
 
 
 // The one and only CtamaniupApp object
-
 CtamaniupApp theApp;
 
 
 // CtamaniupApp initialization
 
+BOOL CtamaniupApp::PreInitInstance()
+{
+	TCHAR szT[MAX_PATH];
+	if (!GetFolderIniDirEx(
+		m_hInstance,
+		szT,
+		_countof(szT),
+		L"Ambiesoft",
+		AfxGetAppName()))
+	{
+		// I18N(_T("%s is not found. Exiting.")));
+		AfxMessageBox(L"Failed to get ini folder.");
+		return FALSE;
+	}
+
+	if (!PathIsDirectory(szT))
+	{
+		if (IDYES != AfxMessageBox(
+			stdFormat(I18N(L"'%s' is not a directory. Do you want to create it now?"), szT).c_str(),
+			MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2))
+		{
+			return FALSE;
+		}
+		CreateCompleteDirectory(szT);
+		if (!PathIsDirectory(szT))
+		{
+			AfxMessageBox(I18N(L"Failed to create directory."));
+			return FALSE;
+		}
+	}
+	wstring strT = stdCombinePath(szT, (LPCTSTR)(CString() + AfxGetAppName() + _T(".ini")));
+
+	free((void*)m_pszProfileName);
+	m_pszProfileName = _tcsdup(strT.c_str());
+
+	return TRUE;
+}
 BOOL CtamaniupApp::InitInstance()
 {
+	if (!PreInitInstance())
+		return FALSE;
+
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.
@@ -58,15 +101,6 @@ BOOL CtamaniupApp::InitInstance()
 
 	// Activate "Windows Native" visual manager for enabling themes in MFC controls
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
-
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	// of your final executable, you should remove from the following
-	// the specific initialization routines you do not need
-	// Change the registry key under which our settings are stored
-	// TODO: You should modify this string to be something appropriate
-	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
 	CtamaniupDlg dlg;
 	m_pMainWnd = &dlg;
@@ -101,4 +135,15 @@ BOOL CtamaniupApp::InitInstance()
 	//  application, rather than start the application's message pump.
 	return FALSE;
 }
-
+std::wstring CtamaniupApp::GetBarnFolder() const
+{
+	string barnFolder;
+	Profile::GetString(SECTION_OPTION, KEY_BARNFOLDER, "", barnFolder, m_pszProfileName);
+	if (barnFolder.empty())
+	{
+		return stdCombinePath(
+			stdGetParentDirectory(stdGetModuleFileName()).c_str(), 
+			STR_BARNDIRECTORYNAME);
+	}
+	return toStdWstringFromUtf8(barnFolder);
+}
